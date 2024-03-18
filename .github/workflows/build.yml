@@ -1,0 +1,50 @@
+env:
+  GH_TOKEN: "${{ github.token }}"
+jobs:
+  build:
+    needs: "prepare_release"
+    runs-on: "ubuntu-latest"
+    steps:
+    - name: "Checkout"
+      uses: "actions/checkout@v4"
+    - name: "Upload rbuild image"
+      uses: "radxa-repo/rbuild@main"
+      with:
+        board: "${{ matrix.boards }}"
+        flavor: "${{ matrix.flavors }}"
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
+        release-id: "${{ needs.prepare_release.outputs.release_id }}"
+        suite: "${{ matrix.suites }}"
+    strategy:
+      matrix:
+        boards:
+        - "rock-5c"
+        flavors:
+        - "kde"
+        suites:
+        - "bullseye"
+  prepare_release:
+    outputs:
+      release_id: "${{ steps.release.outputs.id }}"
+    runs-on: "ubuntu-latest"
+    steps:
+    - name: "Checkout"
+      uses: "actions/checkout@v4"
+    - name: "Generate rbuild changelog"
+      uses: "radxa-repo/rbuild-changelog@main"
+      with:
+        product: "rock-5c"
+    - id: "release"
+      name: "Create empty release"
+      uses: "softprops/action-gh-release@v1"
+      with:
+        body_path: "README.md"
+        draft: false
+        files: ".changelog/changelog.md"
+        prerelease: true
+        tag_name: "b${{ github.run_number }}"
+        target_commitish: "main"
+        token: "${{ secrets.GITHUB_TOKEN }}"
+name: "Build image for Release channel"
+"on":
+  workflow_dispatch: {}
