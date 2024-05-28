@@ -21,6 +21,7 @@ jobs:
         - "rock-5c"
         flavors:
         - "kde"
+        - "cli"
         suites:
         - "bullseye"
   prepare_release:
